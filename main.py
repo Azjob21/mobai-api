@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import pandas as pd
@@ -304,6 +305,8 @@ class XAIRequest(BaseModel):
     date: date
 
 class XAIResponse(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
     product_id: int
     segment: str
     prophet_baseline: float
@@ -857,8 +860,16 @@ def optimize_picking_route(items_with_locs: pd.DataFrame,
 # API ENDPOINTS
 # ============================================================================
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
+    index_path = BASE_DIR / "index.html"
+    if index_path.exists():
+        return HTMLResponse(content=index_path.read_text(encoding="utf-8"), status_code=200)
+    return HTMLResponse(content="<h1>MobAI'26 API</h1><p>Visit <a href='/docs'>/docs</a> for Swagger UI</p>", status_code=200)
+
+
+@app.get("/api")
+async def api_info():
     return {
         "service": "MobAI WMS API",
         "version": "2.0.0",
