@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import pandas as pd
@@ -886,7 +886,8 @@ async def api_info():
             "explainability": "/explain",
             "preparation_order": "/preparation-order",
             "reset_warehouse": "/reset-warehouse",
-            "model_info": "/model-info"
+            "model_info": "/model-info",
+            "download": "/download/{filename}"
         }
     }
 
@@ -950,6 +951,26 @@ async def predict_demand(request: ForecastRequest):
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
+
+
+# ============================================================================
+# FILE DOWNLOAD
+# ============================================================================
+
+@app.get("/download/{filename}")
+async def download_file(filename: str):
+    """Download a generated file (e.g. forecast CSV)."""
+    # Sanitize: only allow simple filenames, no path traversal
+    if '/' in filename or '\\' in filename or '..' in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    file_path = BASE_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+    return FileResponse(
+        path=str(file_path),
+        filename=filename,
+        media_type="text/csv" if filename.endswith(".csv") else "application/octet-stream"
+    )
 
 
 # ============================================================================

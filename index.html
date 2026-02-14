@@ -555,7 +555,7 @@ Select an endpoint and click Send</pre
               name: "output_file",
               label: "Output Filename",
               value: "forecast_submission.csv",
-              hint: "CSV will be saved in the project directory.",
+              hint: "CSV will be saved on the server. A download link will appear after generation.",
             },
           ],
           buildBody(f) {
@@ -892,6 +892,16 @@ Select an endpoint and click Send</pre
             const json = await res.json();
             text = JSON.stringify(json, null, 2);
             bodyEl.textContent = text;
+
+            // Show download button for forecast generation
+            if (current === "forecast" && code >= 200 && code < 300 && json.file_path) {
+              const fname = json.file_path.split(/[\\/]/).pop();
+              const dlUrl = base + "/download/" + encodeURIComponent(fname);
+              const dlDiv = document.createElement("div");
+              dlDiv.style.cssText = "margin-top:12px;padding:10px;background:#0f4c3a;border:1px solid #10b981;border-radius:6px;display:flex;align-items:center;gap:10px;";
+              dlDiv.innerHTML = `<span style="color:#6ee7b7;">✅ CSV generated (${json.total_rows} rows)</span><a href="${dlUrl}" download="${fname}" style="background:#10b981;color:#fff;padding:5px 14px;border-radius:4px;text-decoration:none;font-size:0.85rem;font-weight:600;">⬇ Download ${fname}</a>`;
+              bodyEl.parentElement.appendChild(dlDiv);
+            }
           }
           const bytes = new Blob([text]).size;
           sizeEl.textContent =
@@ -911,7 +921,7 @@ Select an endpoint and click Send</pre
             bodyEl.textContent =
               "Failed to connect: " +
               err.message +
-              "\n\nMake sure the API server is running:\n  uvicorn main:app --host 0.0.0.0 --port 8000";
+              "\n\nCheck that the API server is running and the Base URL is correct.";
           }
         }
         activeAbort = null;
@@ -932,6 +942,9 @@ Select an endpoint and click Send</pre
         document.getElementById("resBody").textContent =
           "Response will appear here";
         document.getElementById("resSize").textContent = "";
+        // Remove any download buttons from previous requests
+        const resPanel = document.querySelector(".res-body");
+        resPanel.querySelectorAll("div").forEach(d => d.remove());
       }
 
       // ── Keyboard shortcut: Ctrl+Enter to send ──
