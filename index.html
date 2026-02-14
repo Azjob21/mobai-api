@@ -352,7 +352,7 @@
         Base URL
         <input
           id="baseUrl"
-          value="http://localhost:8000"
+          value=""
           style="
             background: #0f172a;
             border: 1px solid #334155;
@@ -966,6 +966,15 @@ Select an endpoint and click Send</pre
           badge.className = "badge off";
         }
       }
+
+      // Auto-detect base URL from current page origin
+      (function() {
+        const input = document.getElementById("baseUrl");
+        if (!input.value) {
+          input.value = window.location.origin;
+        }
+      })();
+
       checkHealth();
       setInterval(checkHealth, 15000);
       loadEndpoint("health");
