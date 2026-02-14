@@ -54,13 +54,18 @@ def test_root():
         response = requests.get(f"{BASE_URL}/")
         
         assert response.status_code == 200, "Status code should be 200"
-        data = response.json()
+        # Root serves HTML (index.html)
+        assert "text/html" in response.headers.get("content-type", ""), "Root should serve HTML"
         
+        # Also verify /api returns JSON info
+        api_response = requests.get(f"{BASE_URL}/api")
+        assert api_response.status_code == 200, "/api status code should be 200"
+        data = api_response.json()
         assert "service" in data, "Response should contain 'service'"
         assert data["status"] == "running", "Status should be 'running'"
         
-        print_success("Root endpoint working")
-        print_info("Response:")
+        print_success("Root endpoint working (HTML + /api JSON)")
+        print_info("API Response:")
         print_json(data)
         
         return True

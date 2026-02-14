@@ -98,7 +98,7 @@ warehouse_locations = pd.read_csv(DATA_DIR / "warehouse_locations.csv")
 # Build lookups
 seg_lookup = dict(zip(product_segments["id_produit"], product_segments["segment"]))
 priority_lookup = product_priorities.set_index("id_produit").to_dict("index")
-all_product_ids = list(product_priorities["id_produit"].unique())
+all_product_ids = [int(x) for x in product_priorities["id_produit"].unique()]
 
 # Zone definitions
 RECEIPT_ZONE = {'x': 0, 'y': 0, 'z': 0}
@@ -979,7 +979,7 @@ async def generate_forecast(request: ForecastGenerateRequest):
                 qty = round(pred['predicted_demand'], 2)
                 rows.append({
                     'date': d.strftime("%Y-%m-%d"),
-                    'id_produit': pid,
+                    'id_produit': int(pid),
                     'quantite_demande': qty
                 })
                 if qty > 0:
@@ -1354,8 +1354,8 @@ async def generate_preparation_order(request: PreparationOrderRequest):
         for pid in all_product_ids:
             pred = predict_single_product(pid, forecast_date)
 
-            if pid in overrides:
-                qty = overrides[pid]
+            if int(pid) in overrides:
+                qty = overrides[int(pid)]
                 override_applied = True
             else:
                 qty = pred['predicted_demand']
@@ -1374,7 +1374,7 @@ async def generate_preparation_order(request: PreparationOrderRequest):
                 loc_code = "Non stocke"
 
             items.append(PreparationOrderItem(
-                product_id=pid,
+                product_id=int(pid),
                 predicted_demand=round(pred['predicted_demand'], 2),
                 override_applied=override_applied,
                 source_location=loc_code,
@@ -1384,9 +1384,9 @@ async def generate_preparation_order(request: PreparationOrderRequest):
 
             if stored:
                 picking_items.append(PickingItem(
-                    product_id=pid,
+                    product_id=int(pid),
                     quantity=max(1, int(round(qty))),
-                    location_id=slot_id))
+                    location_id=int(slot_id)))
 
         picking_route = None
         if picking_items:
