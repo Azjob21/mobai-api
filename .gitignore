@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Pytest
+.pytest_cache/
+
+# Generated outputs (can be regenerated)
+forecast_submission.csv
+test_forecast_output.csv
+test_optimization_output.csv
+
+# Backup files
+*_backup.py

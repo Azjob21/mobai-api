@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="MobAI'26 Hackathon — Warehouse Optimization & Demand Forecasting API Tester"
+    />
+    <title>MobAI'26 — API Tester</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        min-height: 100vh;
+      }
+      header {
+        background: linear-gradient(135deg, #1e293b, #334155);
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        border-bottom: 2px solid #3b82f6;
+      }
+      header h1 {
+        font-size: 1.3rem;
+        color: #60a5fa;
+        white-space: nowrap;
+      }
+      header .ver {
+        font-size: 0.65rem;
+        color: #475569;
+        margin-left: -0.4rem;
+      }
+      .badge {
+        font-size: 0.7rem;
+        padding: 2px 10px;
+        border-radius: 10px;
+        font-weight: 700;
+        background: #22c55e;
+        color: #000;
+        cursor: default;
+      }
+      .badge.off {
+        background: #ef4444;
+        color: #fff;
+      }
+      .container {
+        display: flex;
+        height: calc(100vh - 56px);
+      }
+      .sidebar {
+        width: 230px;
+        background: #1e293b;
+        padding: 0.6rem 0;
+        overflow-y: auto;
+        flex-shrink: 0;
+        border-right: 1px solid #334155;
+      }
+      .sidebar button {
+        width: 100%;
+        text-align: left;
+        padding: 0.55rem 1rem;
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        font-size: 0.82rem;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .sidebar button:hover {
+        background: #334155;
+        color: #e2e8f0;
+      }
+      .sidebar button.active {
+        background: #1e3a5f;
+        color: #60a5fa;
+        border-left: 3px solid #3b82f6;
+      }
+      .sidebar button .icon {
+        font-size: 0.9rem;
+        width: 1.2rem;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .sidebar .sep {
+        padding: 0.5rem 1rem 0.25rem;
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        color: #475569;
+        letter-spacing: 1.5px;
+        margin-top: 0.3rem;
+        font-weight: 600;
+      }
+      .main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .panel {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+      }
+      .req-panel,
+      .res-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .panel-header {
+        padding: 0.45rem 1rem;
+        background: #1e293b;
+        font-size: 0.72rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 1px solid #334155;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .req-panel {
+        border-right: 1px solid #334155;
+      }
+      .form-area {
+        flex: 1;
+        padding: 1rem;
+        overflow-y: auto;
+      }
+      .ep-desc {
+        font-size: 0.78rem;
+        color: #64748b;
+        margin-bottom: 0.8rem;
+        line-height: 1.45;
+        border-left: 2px solid #334155;
+        padding-left: 0.6rem;
+      }
+      .field {
+        margin-bottom: 0.75rem;
+      }
+      .field label {
+        display: block;
+        font-size: 0.76rem;
+        color: #94a3b8;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+      }
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+        padding: 0.45rem 0.6rem;
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        color: #e2e8f0;
+        font-size: 0.84rem;
+        transition: border-color 0.15s;
+      }
+      .field textarea {
+        min-height: 140px;
+        font-family: "Cascadia Code", "Fira Code", monospace;
+        resize: vertical;
+        font-size: 0.8rem;
+        line-height: 1.5;
+      }
+      .field input:focus,
+      .field textarea:focus,
+      .field select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+      }
+      .actions {
+        padding: 0.7rem 1rem;
+        background: #1e293b;
+        border-top: 1px solid #334155;
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      .actions .shortcut {
+        font-size: 0.65rem;
+        color: #475569;
+        margin-left: auto;
+      }
+      .btn {
+        padding: 0.45rem 1.1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.82rem;
+        font-weight: 600;
+        transition: all 0.15s;
+      }
+      .btn-primary {
+        background: #3b82f6;
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: #2563eb;
+      }
+      .btn-primary:disabled {
+        background: #475569;
+        cursor: not-allowed;
+      }
+      .btn-secondary {
+        background: #334155;
+        color: #94a3b8;
+      }
+      .btn-secondary:hover {
+        background: #475569;
+        color: #e2e8f0;
+      }
+      .btn-danger {
+        background: #7f1d1d;
+        color: #fca5a5;
+      }
+      .btn-danger:hover {
+        background: #991b1b;
+      }
+      .res-body {
+        flex: 1;
+        padding: 1rem;
+        overflow-y: auto;
+      }
+      pre.response {
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 0.8rem;
+        font-size: 0.78rem;
+        font-family: "Cascadia Code", "Fira Code", monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+        line-height: 1.55;
+        color: #a5f3fc;
+        min-height: 100px;
+      }
+      .status {
+        font-size: 0.78rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+      .status.s2 {
+        background: #166534;
+        color: #86efac;
+      }
+      .status.s4 {
+        background: #92400e;
+        color: #fcd34d;
+      }
+      .status.s5 {
+        background: #991b1b;
+        color: #fca5a5;
+      }
+      .status.loading {
+        background: #1e3a5f;
+        color: #93c5fd;
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.6;
+        }
+      }
+      .meta {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        padding: 0.4rem 1rem;
+        background: #1e293b;
+        border-bottom: 1px solid #334155;
+      }
+      .meta .time {
+        font-size: 0.72rem;
+        color: #64748b;
+      }
+      .hint {
+        font-size: 0.68rem;
+        color: #475569;
+        margin-top: 0.2rem;
+      }
+      .method-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        font-family: monospace;
+      }
+      .method-badge.get {
+        background: #166534;
+        color: #86efac;
+      }
+      .method-badge.post {
+        background: #1e3a5f;
+        color: #93c5fd;
+      }
+      .ep-path {
+        font-family: "Cascadia Code", "Fira Code", monospace;
+        font-size: 0.84rem;
+        color: #e2e8f0;
+        margin-left: 0.4rem;
+      }
+      @media (max-width: 800px) {
+        .sidebar {
+          width: 180px;
+        }
+        .sidebar button {
+          font-size: 0.78rem;
+          padding: 0.45rem 0.7rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>📦 MobAI'26 API Tester</h1>
+      <span class="ver">v2.0</span>
+      <span id="statusBadge" class="badge off">Checking...</span>
+      <span style="flex: 1"></span>
+      <span
+        style="
+          font-size: 0.73rem;
+          color: #64748b;
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+        "
+      >
+        Base URL
+        <input
+          id="baseUrl"
+          value="http://localhost:8000"
+          style="
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.73rem;
+            width: 200px;
+            font-family: monospace;
+          "
+        />
+      </span>
+    </header>
+
+    <div class="container">
+      <div class="sidebar">
+        <div class="sep">General</div>
+        <button onclick="loadEndpoint('health')" id="tab-health">
+          <span class="icon">💚</span> Health Check
+        </button>
+        <button onclick="loadEndpoint('info')" id="tab-info">
+          <span class="icon">ℹ️</span> Model Info
+        </button>
+
+        <div class="sep">Task 2 — Forecasting</div>
+        <button onclick="loadEndpoint('predict')" id="tab-predict">
+          <span class="icon">📈</span> Predict Demand
+        </button>
+        <button onclick="loadEndpoint('forecast')" id="tab-forecast">
+          <span class="icon">📊</span> Forecast CSV
+        </button>
+        <button onclick="loadEndpoint('explain')" id="tab-explain">
+          <span class="icon">🔍</span> Explainability
+        </button>
+
+        <div class="sep">Task 1 — Warehouse</div>
+        <button onclick="loadEndpoint('storage')" id="tab-storage">
+          <span class="icon">📥</span> Assign Storage
+        </button>
+        <button onclick="loadEndpoint('picking')" id="tab-picking">
+          <span class="icon">🛒</span> Optimize Picking
+        </button>
+        <button onclick="loadEndpoint('simulate')" id="tab-simulate">
+          <span class="icon">⚙️</span> Simulate Flows
+        </button>
+        <button onclick="loadEndpoint('state')" id="tab-state">
+          <span class="icon">🏭</span> Warehouse State
+        </button>
+        <button onclick="loadEndpoint('order')" id="tab-order">
+          <span class="icon">📋</span> Preparation Order
+        </button>
+        <button onclick="loadEndpoint('reset')" id="tab-reset">
+          <span class="icon">🔄</span> Reset Warehouse
+        </button>
+      </div>
+
+      <div class="main">
+        <div class="panel">
+          <div class="req-panel">
+            <div class="panel-header">
+              <span>Request</span>
+              <span
+                id="reqPreview"
+                style="
+                  font-size: 0.68rem;
+                  color: #475569;
+                  font-family: monospace;
+                "
+              ></span>
+            </div>
+            <div class="form-area" id="formArea">
+              <p style="color: #64748b; font-size: 0.85rem">
+                Select an endpoint from the sidebar to get started.
+              </p>
+            </div>
+            <div class="actions">
+              <button
+                class="btn btn-primary"
+                id="sendBtn"
+                onclick="sendRequest()"
+              >
+                ▶ Send
+              </button>
+              <button
+                class="btn btn-danger"
+                id="cancelBtn"
+                onclick="cancelRequest()"
+                style="display: none"
+              >
+                ⛔ Cancel
+              </button>
+              <button class="btn btn-secondary" onclick="clearResponse()">
+                Clear
+              </button>
+              <span class="shortcut">Ctrl + Enter</span>
+            </div>
+          </div>
+          <div class="res-panel">
+            <div class="panel-header">
+              <span>Response</span>
+              <span
+                id="resSize"
+                style="font-size: 0.68rem; color: #475569"
+              ></span>
+            </div>
+            <div class="meta" id="resMeta" style="display: none">
+              <span class="status" id="resStatus"></span>
+              <span class="time" id="resTime"></span>
+            </div>
+            <div class="res-body">
+              <pre class="response" id="resBody">
+Select an endpoint and click Send</pre
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ── Helpers ──
+      const TODAY = new Date().toISOString().slice(0, 10);
+      const TOMORROW = new Date(Date.now() + 86400000)
+        .toISOString()
+        .slice(0, 10);
+      const IN_10_DAYS = new Date(Date.now() + 86400000 * 10)
+        .toISOString()
+        .slice(0, 10);
+      const IN_3_DAYS = new Date(Date.now() + 86400000 * 3)
+        .toISOString()
+        .slice(0, 10);
+
+      // Sample product IDs from the dataset
+      const SAMPLE_HF = [34015, 34016, 34017]; // High-Frequency segment
+      const SAMPLE_LF = [31554, 31565]; // Low-Frequency segment
+      const SAMPLE_MIX = [31554, 31565, 34015, 31557, 31993];
+
+      // ── Endpoint Definitions ──
+      const ENDPOINTS = {
+        health: {
+          method: "GET",
+          path: "/health",
+          desc: "Check API health, model loading status, and warehouse occupancy.",
+          fields: [],
+        },
+        info: {
+          method: "GET",
+          path: "/model-info",
+          desc: "Full model documentation: architecture, features, performance metrics (WAPE, AUC), and assumptions.",
+          fields: [],
+        },
+        predict: {
+          method: "POST",
+          path: "/predict",
+          desc: "Forecast demand for one or more products on a single date. Returns predicted quantity, probability, confidence interval, and segment.",
+          fields: [
+            {
+              name: "product_ids",
+              label: "Product IDs (comma-separated)",
+              value: SAMPLE_MIX.join(", "),
+              hint: `HF examples: ${SAMPLE_HF.join(", ")} · LF examples: ${SAMPLE_LF.join(", ")} · 1129 products total`,
+            },
+            {
+              name: "date",
+              label: "Forecast Date",
+              value: TOMORROW,
+              type: "date",
+              hint: "Single date. The model uses Prophet + XGBoost ensemble.",
+            },
+          ],
+          buildBody(f) {
+            return {
+              product_ids: f.product_ids
+                .split(",")
+                .map((s) => parseInt(s.trim()))
+                .filter((n) => !isNaN(n)),
+              date: f.date,
+            };
+          },
+        },
+        forecast: {
+          method: "POST",
+          path: "/generate-forecast",
+          desc: "Generate a full forecast CSV (date, id_produit, quantite_demande) for all 1129 products over a date range. Saves to disk and returns summary.",
+          fields: [
+            {
+              name: "start_date",
+              label: "Start Date",
+              value: TOMORROW,
+              type: "date",
+            },
+            {
+              name: "end_date",
+              label: "End Date",
+              value: IN_10_DAYS,
+              type: "date",
+              hint: "Competition uses 10-day horizon. ⚠️ ~30s per day × 1129 products — 10 days takes ~5 min. A live timer will show progress.",
+            },
+            {
+              name: "output_file",
+              label: "Output Filename",
+              value: "forecast_submission.csv",
+              hint: "CSV will be saved in the project directory.",
+            },
+          ],
+          buildBody(f) {
+            return {
+              start_date: f.start_date,
+              end_date: f.end_date,
+              output_file: f.output_file || "forecast_submission.csv",
+            };
+          },
+        },
+        explain: {
+          method: "POST",
+          path: "/explain",
+          desc: "Explainability (XAI): See the Prophet baseline, classifier probability, top feature importances, and how the final prediction is constructed for a single product on a given date.",
+          fields: [
+            {
+              name: "product_id",
+              label: "Product ID",
+              value: "31554",
+              hint: `Try HF product ${SAMPLE_HF[0]} or LF product ${SAMPLE_LF[0]}`,
+            },
+            { name: "date", label: "Date", value: TOMORROW, type: "date" },
+          ],
+          buildBody(f) {
+            return { product_id: parseInt(f.product_id), date: f.date };
+          },
+        },
+        storage: {
+          method: "POST",
+          path: "/assign-storage",
+          desc: "Assign a product to an optimal warehouse slot. Uses demand-based priority: HF products go to ground-floor PICKING zones near expedition, LF products go to RESERVE.",
+          fields: [
+            {
+              name: "product_id",
+              label: "Product ID",
+              value: "34015",
+              hint: "HF products get priority PICKING slots closer to expedition",
+            },
+            {
+              name: "quantity",
+              label: "Quantity",
+              value: "100",
+              type: "number",
+              hint: "Number of units to store",
+            },
+            {
+              name: "weight_kg",
+              label: "Weight (kg, optional)",
+              value: "",
+              hint: "Used for chariot capacity planning if provided",
+            },
+          ],
+          buildBody(f) {
+            const body = {
+              product_id: parseInt(f.product_id),
+              quantity: parseInt(f.quantity),
+            };
+            if (f.weight_kg && !isNaN(parseFloat(f.weight_kg)))
+              body.weight_kg = parseFloat(f.weight_kg);
+            return body;
+          },
+        },
+        picking: {
+          method: "POST",
+          path: "/optimize-picking",
+          desc: "Optimize the picking route for a list of items. Splits into chariot trips, minimizes total travel distance using nearest-neighbour routing, and detects aisle congestion.",
+          fields: [
+            {
+              name: "body",
+              label: "Request Body (JSON)",
+              type: "textarea",
+              value: JSON.stringify(
+                {
+                  items: [
+                    { product_id: 34015, quantity: 50 },
+                    { product_id: 34016, quantity: 30 },
+                    { product_id: 31554, quantity: 20 },
+                  ],
+                  chariot_capacity_kg: 500,
+                  max_chariots: 3,
+                },
+                null,
+                2,
+              ),
+              hint: "items: [{product_id, quantity, location_id?}] — products must be stored first via /assign-storage",
+            },
+          ],
+          buildBody(f) {
+            return JSON.parse(f.body);
+          },
+        },
+        simulate: {
+          method: "POST",
+          path: "/simulate",
+          desc: "Simulate a sequence of warehouse ingoing/outgoing events. Models real stock movements, auto-assigns storage, and produces picking routes for outgoing flows.",
+          fields: [
+            {
+              name: "body",
+              label: "Request Body (JSON)",
+              type: "textarea",
+              value: JSON.stringify(
+                {
+                  events: [
+                    {
+                      date: TOMORROW,
+                      product_id: 34015,
+                      flow_type: "ingoing",
+                      quantity: 200,
+                    },
+                    {
+                      date: TOMORROW,
+                      product_id: 31554,
+                      flow_type: "ingoing",
+                      quantity: 150,
+                    },
+                    {
+                      date: IN_3_DAYS,
+                      product_id: 34015,
+                      flow_type: "outgoing",
+                      quantity: 80,
+                    },
+                  ],
+                  reset_state: true,
+                },
+                null,
+                2,
+              ),
+              hint: "flow_type: 'ingoing' (reception) or 'outgoing' (expedition). reset_state: true clears warehouse first.",
+            },
+          ],
+          buildBody(f) {
+            return JSON.parse(f.body);
+          },
+        },
+        state: {
+          method: "GET",
+          path: "/warehouse-state",
+          desc: "View current warehouse occupancy: PICKING vs RESERVE zones, occupied slots, and stored products. 837 total slots (658 picking + 178 reserve).",
+          fields: [],
+        },
+        order: {
+          method: "POST",
+          path: "/preparation-order",
+          desc: "Generate a preparation order for a given date. Forecasts demand for all products, identifies which are currently in stock, and builds an optimized picking route. Optionally override quantities.",
+          fields: [
+            {
+              name: "date",
+              label: "Preparation Date",
+              value: TOMORROW,
+              type: "date",
+              hint: "Forecasts demand for this date and generates pick list for in-stock products",
+            },
+            {
+              name: "overrides",
+              label: "Quantity Overrides (JSON, optional)",
+              type: "textarea",
+              value: "",
+              hint: 'Optional: {"34015": 50, "31554": 100} — override predicted demand for specific products',
+            },
+          ],
+          buildBody(f) {
+            const body = { date: f.date };
+            if (f.overrides && f.overrides.trim()) {
+              const raw = JSON.parse(f.overrides);
+              const parsed = {};
+              for (const [k, v] of Object.entries(raw))
+                parsed[parseInt(k)] = parseFloat(v);
+              body.override_quantities = parsed;
+            }
+            return body;
+          },
+        },
+        reset: {
+          method: "POST",
+          path: "/reset-warehouse",
+          desc: "Clear all warehouse state — removes all stored products and resets slot occupancy to 0. Useful before running a fresh simulation.",
+          fields: [],
+          isDanger: true,
+        },
+      };
+
+      let current = null;
+
+      function loadEndpoint(key) {
+        current = key;
+        document
+          .querySelectorAll(".sidebar button")
+          .forEach((b) => b.classList.remove("active"));
+        const tab = document.getElementById("tab-" + key);
+        if (tab) tab.classList.add("active");
+
+        const ep = ENDPOINTS[key];
+        const form = document.getElementById("formArea");
+        const preview = document.getElementById("reqPreview");
+        preview.textContent = ep.method + " " + ep.path;
+
+        let html = `<div style="margin-bottom:.6rem">
+          <span class="method-badge ${ep.method.toLowerCase()}">${ep.method}</span>
+          <span class="ep-path">${ep.path}</span>
+        </div>`;
+
+        if (ep.desc) {
+          html += `<div class="ep-desc">${ep.desc}</div>`;
+        }
+
+        if (ep.fields.length === 0) {
+          html +=
+            '<p style="color:#64748b;font-size:.85rem;margin-top:.5rem">No parameters required. Click <strong>Send</strong>.</p>';
+          if (ep.isDanger) {
+            html +=
+              '<p style="color:#fca5a5;font-size:.78rem;margin-top:.5rem">⚠️ This action cannot be undone.</p>';
+          }
+        }
+
+        for (const f of ep.fields) {
+          html += `<div class="field"><label>${f.label}</label>`;
+          if (f.type === "textarea") {
+            html += `<textarea id="f_${f.name}">${f.value || ""}</textarea>`;
+          } else {
+            html += `<input id="f_${f.name}" type="${f.type || "text"}" value="${f.value || ""}" placeholder="${f.placeholder || ""}">`;
+          }
+          if (f.hint) html += `<div class="hint">${f.hint}</div>`;
+          html += "</div>";
+        }
+        form.innerHTML = html;
+        clearResponse();
+      }
+
+      function getFieldValues() {
+        const ep = ENDPOINTS[current];
+        const vals = {};
+        for (const f of ep.fields) {
+          const el = document.getElementById("f_" + f.name);
+          vals[f.name] = el ? el.value : "";
+        }
+        return vals;
+      }
+
+      let activeAbort = null;
+      let tickTimer = null;
+
+      async function sendRequest() {
+        if (!current) return;
+
+        // If already running, abort it
+        if (activeAbort) {
+          activeAbort.abort();
+          activeAbort = null;
+        }
+        if (tickTimer) {
+          clearInterval(tickTimer);
+          tickTimer = null;
+        }
+
+        const ep = ENDPOINTS[current];
+        const base = document
+          .getElementById("baseUrl")
+          .value.replace(/\/+$/, "");
+        const url = base + ep.path;
+        const isLongRunning = current === "forecast" || current === "order";
+
+        const btn = document.getElementById("sendBtn");
+        const cancelBtn = document.getElementById("cancelBtn");
+        btn.disabled = true;
+        btn.textContent = isLongRunning ? "⏳ Processing..." : "⏳ Sending...";
+        cancelBtn.style.display = isLongRunning ? "inline-block" : "none";
+
+        const meta = document.getElementById("resMeta");
+        const statusEl = document.getElementById("resStatus");
+        const timeEl = document.getElementById("resTime");
+        const bodyEl = document.getElementById("resBody");
+        const sizeEl = document.getElementById("resSize");
+
+        meta.style.display = "flex";
+        statusEl.className = "status loading";
+        sizeEl.textContent = "";
+
+        const t0 = performance.now();
+
+        // Live elapsed timer
+        const updateTime = () => {
+          const s = ((performance.now() - t0) / 1000).toFixed(1);
+          timeEl.textContent = s + "s";
+        };
+        tickTimer = setInterval(updateTime, 200);
+        updateTime();
+
+        if (isLongRunning) {
+          statusEl.textContent = "Processing...";
+          bodyEl.textContent =
+            "⏳ This may take several minutes.\n\nForecasting 1129 products × N days...\nThe server is working — do NOT close this tab.\n\nYou can click Cancel to abort.";
+        } else {
+          statusEl.textContent = "Loading...";
+          bodyEl.textContent = "Waiting for response...";
+        }
+
+        const controller = new AbortController();
+        activeAbort = controller;
+
+        try {
+          const opts = {
+            method: ep.method,
+            headers: {},
+            signal: controller.signal,
+          };
+          if (ep.method === "POST") {
+            opts.headers["Content-Type"] = "application/json";
+            if (ep.fields.length > 0) {
+              const vals = getFieldValues();
+              opts.body = JSON.stringify(ep.buildBody(vals));
+            } else {
+              opts.body = "{}";
+            }
+          }
+
+          const res = await fetch(url, opts);
+          clearInterval(tickTimer);
+          tickTimer = null;
+          const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+          timeEl.textContent = elapsed + "s";
+
+          const code = res.status;
+          statusEl.textContent = code + " " + res.statusText;
+          if (code >= 200 && code < 300) statusEl.className = "status s2";
+          else if (code >= 400 && code < 500) statusEl.className = "status s4";
+          else statusEl.className = "status s5";
+
+          const ct = res.headers.get("content-type") || "";
+          let text;
+          if (ct.includes("text/csv")) {
+            text = await res.text();
+            bodyEl.textContent = text;
+          } else {
+            const json = await res.json();
+            text = JSON.stringify(json, null, 2);
+            bodyEl.textContent = text;
+          }
+          const bytes = new Blob([text]).size;
+          sizeEl.textContent =
+            bytes > 1024 ? (bytes / 1024).toFixed(1) + " KB" : bytes + " B";
+        } catch (err) {
+          clearInterval(tickTimer);
+          tickTimer = null;
+          const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+          timeEl.textContent = elapsed + "s";
+          if (err.name === "AbortError") {
+            statusEl.className = "status s4";
+            statusEl.textContent = "Cancelled";
+            bodyEl.textContent = "Request was cancelled by user.";
+          } else {
+            statusEl.className = "status s5";
+            statusEl.textContent = "Connection Error";
+            bodyEl.textContent =
+              "Failed to connect: " +
+              err.message +
+              "\n\nMake sure the API server is running:\n  uvicorn main:app --host 0.0.0.0 --port 8000";
+          }
+        }
+        activeAbort = null;
+        btn.disabled = false;
+        btn.textContent = "▶ Send";
+        cancelBtn.style.display = "none";
+      }
+
+      function cancelRequest() {
+        if (activeAbort) {
+          activeAbort.abort();
+          activeAbort = null;
+        }
+      }
+
+      function clearResponse() {
+        document.getElementById("resMeta").style.display = "none";
+        document.getElementById("resBody").textContent =
+          "Response will appear here";
+        document.getElementById("resSize").textContent = "";
+      }
+
+      // ── Keyboard shortcut: Ctrl+Enter to send ──
+      document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          sendRequest();
+        }
+      });
+
+      // ── Health check on load + interval ──
+      async function checkHealth() {
+        const badge = document.getElementById("statusBadge");
+        try {
+          const base = document
+            .getElementById("baseUrl")
+            .value.replace(/\/+$/, "");
+          const res = await fetch(base + "/health", {
+            signal: AbortSignal.timeout(3000),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const products = data?.data?.products || "?";
+            badge.textContent = `Online · ${products} products`;
+            badge.className = "badge";
+          } else {
+            badge.textContent = "API Error";
+            badge.className = "badge off";
+          }
+        } catch {
+          badge.textContent = "Offline";
+          badge.className = "badge off";
+        }
+      }
+      checkHealth();
+      setInterval(checkHealth, 15000);
+      loadEndpoint("health");
+    </script>
+  </body>
+</html>
